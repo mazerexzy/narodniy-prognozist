@@ -1,0 +1,27 @@
+# systemd-сервис для запуска без Docker (Ubuntu 24.04+ / Debian 12+, Python 3.11+).
+#
+#   sudo cp deploy/narodniy-prognozist.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now narodniy-prognozist
+#   journalctl -u narodniy-prognozist -f        # логи
+#
+# Пути ниже рассчитаны на проект в /opt/narodniy-prognozist и пользователя bot:
+#   sudo useradd --system --create-home bot
+#   sudo chown -R bot:bot /opt/narodniy-prognozist
+
+[Unit]
+Description=Narodniy Prognozist Telegram bot
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/opt/narodniy-prognozist
+ExecStart=/opt/narodniy-prognozist/.venv/bin/python -m bot
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

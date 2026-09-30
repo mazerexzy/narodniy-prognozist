@@ -1,0 +1,50 @@
+# Продакшн: бот + PostgreSQL + Redis.
+#   1. Заполните .env (BOT_TOKEN, ADMIN_IDS, POSTGRES_PASSWORD).
+#   2. docker compose up -d --build
+#   3. Логи: docker compose logs -f bot
+
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Перекрывают значения из .env: внутри compose бот ходит в контейнеры db и redis.
+      DATABASE_URL: postgresql://prognoz:${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env}@db:5432/prognoz
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prognoz
+      POSTGRES_USER: prognoz
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prognoz -d prognoz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:

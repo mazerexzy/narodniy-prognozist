@@ -1,0 +1,7 @@
+aiogram>=3.13,<4
+SQLAlchemy>=2.0.30,<2.1
+alembic>=1.13
+aiosqlite>=0.20          # SQLite (разработка)
+asyncpg>=0.29            # PostgreSQL (продакшн)
+redis>=5                 # FSM-состояния в Redis (необязательно, при REDIS_URL)
+pydantic-settings>=2.7
